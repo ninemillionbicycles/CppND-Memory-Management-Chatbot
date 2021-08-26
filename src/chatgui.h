@@ -28,7 +28,7 @@ public:
     ~ChatBotPanelDialog();
 
     // getter / setter
-    // Return the raw pointer since caller just needs to inspect underlying ChatLogic object
+    // CHANGED: Return the raw pointer since caller just needs to inspect underlying ChatLogic object
     ChatLogic *GetChatLogicHandle() { return _chatLogic.get(); }
 
     // events
