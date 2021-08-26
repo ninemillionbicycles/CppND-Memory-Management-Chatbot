@@ -17,8 +17,8 @@ private:
     ////
 
     // data handles (owned)
-    std::vector<GraphNode *> _nodes;
-    // std::vector<std::unique_ptr<GraphNode>> _nodes; // CHANGED
+    // std::vector<GraphNode *> _nodes;
+    std::vector<std::unique_ptr<GraphNode>> _nodes; // CHANGED
     std::vector<GraphEdge *> _edges;
 
     ////

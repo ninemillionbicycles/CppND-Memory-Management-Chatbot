@@ -115,7 +115,7 @@ ChatBotPanelDialog::ChatBotPanelDialog(wxWindow *parent, wxWindowID id)
     // allow for PNG images to be handled
     wxInitAllImageHandlers();
 
-    //// STUDENT CODE -> DONE
+    //// STUDENT CODE
     ////
 
     // create chat logic instance 
@@ -133,7 +133,7 @@ ChatBotPanelDialog::ChatBotPanelDialog(wxWindow *parent, wxWindowID id)
 
 ChatBotPanelDialog::~ChatBotPanelDialog()
 {
-    //// STUDENT CODE -> DONE
+    //// STUDENT CODE
     ////
 
     // _chatLogic is now a unique_ptr and does not have to be deleted anymore
