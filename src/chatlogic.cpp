@@ -42,11 +42,14 @@ ChatLogic::~ChatLogic()
     }
     */
 
+    // CHANGED: Should not be needed anymore since smart pointer is deleted automatically
+    /*
     // delete all edges
     for (auto it = std::begin(_edges); it != std::end(_edges); ++it)
     {
         delete *it;
     }
+    */
 
     ////
     //// EOF STUDENT CODE
@@ -166,20 +169,21 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                             auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](std::unique_ptr<GraphNode> &node) { return node->GetID() == std::stoi(childToken->second); }); // CHANGED: Same logic as above
 
                             // create new edge
-                            GraphEdge *edge = new GraphEdge(id);
+                            // GraphEdge *edge = new GraphEdge(id);
+                            std::unique_ptr<GraphEdge> edge = std::make_unique<GraphEdge>(id); // CHANGED
                             edge->SetChildNode((*childNode).get()); // CHANGED: Again, childNode is an iterator to a unique_ptr<GraphNode> instance.
                                                                     // I can get a pointer to the underlying unique_ptr<GraphNode> by using the dereferencing operator *.
                                                                     // I then can get a pointer to the managed GraphNode object with .get().
                             edge->SetParentNode((*parentNode).get()); // CHANGED: Same as above
-                            _edges.push_back(edge);
+                            // _edges.emplace_back(std::move(edge)); // CHANGED
 
                             // find all keywords for current node
-                            AddAllTokensToElement("KEYWORD", tokens, *edge);
+                            AddAllTokensToElement("KEYWORD", tokens, *edge); // CHANGED
 
                             // store reference in child node and parent node
-                            ((*childNode).get())->AddEdgeToParentNode(edge); // CHANGED: By dereferencing once, I get to the unique_ptr
+                            (*childNode)->AddEdgeToParentNode(edge.get()); // CHANGED: By dereferencing once, I get to the unique_ptr
                                                                              // I then get a pointer to the GraphNode instance using .get()
-                            ((*parentNode).get())->AddEdgeToChildNode(edge); // CHANGED
+                            (*parentNode)->AddEdgeToChildNode(std::move(edge)); // CHANGED
                         }
 
                         ////
