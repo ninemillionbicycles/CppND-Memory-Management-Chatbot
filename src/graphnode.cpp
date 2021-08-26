@@ -11,7 +11,8 @@ GraphNode::~GraphNode()
     //// STUDENT CODE
     ////
 
-    delete _chatBot; 
+    // Constructor doesn't call new so destructor probably shouldn't call delete
+    // delete _chatBot; 
 
     ////
     //// EOF STUDENT CODE
