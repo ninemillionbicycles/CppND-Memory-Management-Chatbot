@@ -14,7 +14,7 @@ private:
     wxBoxSizer *_dialogSizer;
     wxBitmap _image;
 
-    //// STUDENT CODE
+    //// STUDENT CODE -> DONE
     ////
 
     std::unique_ptr<ChatLogic> _chatLogic;

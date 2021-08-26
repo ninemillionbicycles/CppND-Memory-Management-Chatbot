@@ -23,13 +23,14 @@ ChatBot::ChatBot(std::string filename)
     std::cout << "ChatBot Constructor" << std::endl;
     
     // invalidate data handles
-    _chatLogic = nullptr; // CHANGED: This should not be needed anymore with a unique pointer
+    // _chatLogic = nullptr; // CHANGED: This should not be needed anymore with a unique pointer
     _rootNode = nullptr;
 
     // load image into heap memory
     _image = new wxBitmap(filename, wxBITMAP_TYPE_PNG);
 }
 
+// 1. destructor
 ChatBot::~ChatBot()
 {
     std::cout << "ChatBot Destructor" << std::endl;
@@ -44,6 +45,50 @@ ChatBot::~ChatBot()
 
 //// STUDENT CODE
 ////
+
+// According to the program schematic, the chatbot should have exclusive ownership over the _image
+
+// 2. copy constructor with exclusive ownership policy
+ChatBot::ChatBot(ChatBot &source) 
+{
+    std::cout << "ChatBot Copy Constructor" << std::endl;
+
+    _image = source._image;
+    source._image = NULL;
+}
+
+// 3. copy assignment operator with exclusive ownership policy
+ChatBot &ChatBot::operator=(ChatBot &source)
+{
+    std::cout << "ChatBot Copy Assignment Operator" << std::endl;
+    
+    if (this == &source) { return *this; } // protect against self-assignment
+    
+    _image = source._image;
+    source._image = NULL;
+    return *this;
+} 
+
+// 4. move constructor with exclusive ownership policy
+ChatBot::ChatBot(ChatBot &&source)
+{
+    std::cout << "ChatBot Move Constructor" << std::endl;
+
+    _image = source._image;
+    source._image = NULL;
+}
+
+// 5. move assignment operator with exclusive ownership policy
+ChatBot &ChatBot::operator=(ChatBot &&source)
+{
+    std::cout << "ChatBot Move Assignment Operator" << std::endl;
+    
+    if (this == &source) { return *this; } // protect against self-assignment
+    
+    _image = source._image;
+    source._image = NULL;
+    return *this;
+} 
 
 ////
 //// EOF STUDENT CODE
