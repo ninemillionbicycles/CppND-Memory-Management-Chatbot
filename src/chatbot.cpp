@@ -2,7 +2,6 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
-
 #include "chatlogic.h"
 #include "graphnode.h"
 #include "graphedge.h"
@@ -13,17 +12,17 @@ ChatBot::ChatBot()
 {
     // invalidate data handles
     _image = nullptr;
-    // _chatLogic = nullptr; // This is not needed anymore with a unique pointer
+    _chatLogic = nullptr;
     _rootNode = nullptr;
 }
 
 // constructor WITH memory allocation
 ChatBot::ChatBot(std::string filename)
 {
-    std::cout << "ChatBot Constructor" << std::endl;
+    std::cout << "ChatBot Constructor: Create object at " << this << std::endl;
 
     // invalidate data handles
-    // _chatLogic = nullptr; // This is not needed anymore with a unique pointer
+    _chatLogic = nullptr;
     _rootNode = nullptr;
 
     // load image into heap memory
@@ -33,7 +32,7 @@ ChatBot::ChatBot(std::string filename)
 // 1. destructor
 ChatBot::~ChatBot()
 {
-    std::cout << "ChatBot Destructor" << std::endl;
+    std::cout << "ChatBot Destructor: Destroy object at " << this << std::endl;
 
     // deallocate heap memory
     if (_image != NULL) // Attention: wxWidgets used NULL and not nullptr
@@ -43,15 +42,10 @@ ChatBot::~ChatBot()
     }
 }
 
-//// STUDENT CODE
-////
-
-// According to the program schematic, the chatbot should have exclusive ownership over the _image
-
 // 2. copy constructor with exclusive ownership policy
 ChatBot::ChatBot(const ChatBot &source)
 {
-    std::cout << "ChatBot Copy Constructor" << std::endl;
+    std::cout << "ChatBot Copy Constructor: Copy object at " << &source << " to " << this << std::endl;
 
     // create deep copy for owned data
     _image = new wxBitmap();
@@ -69,18 +63,13 @@ ChatBot::ChatBot(const ChatBot &source)
 // 3. copy assignment operator
 ChatBot &ChatBot::operator=(const ChatBot &source)
 {
-    std::cout << "ChatBot Copy Assignment Operator" << std::endl;
+    std::cout << "ChatBot Copy Assignment Operator: Copy object at " << &source << " to " << this << std::endl;
     
-    if (this == &source)
-    {
-        return *this;
-    } // protect against self-assignment
+    // protect against self-assignment
+    if (this == &source) { return *this; } 
 
-    // delete owned data if it exists in this
-    if (_image != NULL)
-    {
-        delete _image;
-    }
+    // delete owned data if it exists in this._image
+    if (_image != NULL) { delete _image; }
 
     // create deep copy for owned data
     _image = new wxBitmap();
@@ -100,11 +89,13 @@ ChatBot &ChatBot::operator=(const ChatBot &source)
 // 4. move constructor
 ChatBot::ChatBot(ChatBot &&source)
 {
-    std::cout << "ChatBot Move Constructor" << std::endl;
-
-    // create deep copy for owned data // TODO: I am thinking it should work with a shallow copy too because I will call source._image = NULL later?
-    _image = new wxBitmap();
-    *_image = *source._image;
+    std::cout << "ChatBot Move Constructor: Move object from " << &source << " to " << this << std::endl;
+    
+    // create a shallow copy of image as this is the **move** constructor and we want to avoid deep copies where possible
+    _image = source._image;
+    
+    // invalidate the data handle of source to NULL so that the heap memory allocated to _image is not deallocated when the destructor is called for source
+    source._image = NULL;
 
     // create shallow copy for non-owned data
     _currentNode = source._currentNode;
@@ -114,14 +105,7 @@ ChatBot::ChatBot(ChatBot &&source)
     // make sure that this copy can be handled by chatLogic
     _chatLogic->SetChatbotHandle(this);
 
-    // delete owned source data
-    if (source._image != NULL) // Attention: wxWidgets used NULL and not nullptr
-    {
-        delete source._image;
-        source._image = NULL;
-    }
-
-    // invalidate source handles
+    // invalidate source handles for non-owned data
     source._currentNode = nullptr;
     source._rootNode = nullptr;
     source._chatLogic = nullptr;
@@ -130,22 +114,18 @@ ChatBot::ChatBot(ChatBot &&source)
 // 5. move assignment operator with exclusive ownership policy
 ChatBot &ChatBot::operator=(ChatBot &&source)
 {
-    std::cout << "ChatBot Move Assignment Operator" << std::endl;
+    std::cout << "ChatBot Move Assignment Operator: Move object from " << &source << " to " << this << std::endl;
 
-    if (this == &source)
-    {
-        return *this;
-    } // protect against self-assignment
+    // protect against self-assignment
+    if (this == &source) { return *this; } 
 
-    // delete owned data if it exists in this
-    if (_image != NULL)
-    {
-        delete _image;
-    }
+    // delete owned data if it exists in this._image
+    if (_image != NULL) { delete _image; }
 
-    // create deep copy for owned data // TODO: I am thinking it should work with a shallow copy too because I will call source._image = NULL later?
-    _image = new wxBitmap();
-    *_image = *source._image;
+    // create a shallow copy of image as this is the **move** constructor and we want to avoid deep copies where possible
+    // invalidate the data handle of source to NULL so that the heap memory allocated to _image is not deallocated when the destructor is called for source
+    _image = source._image;
+    source._image = NULL;
 
     // create shallow copy for non-owned data
     _currentNode = source._currentNode;
@@ -155,23 +135,13 @@ ChatBot &ChatBot::operator=(ChatBot &&source)
     // make sure that this copy can be handled by chatLogic
     _chatLogic->SetChatbotHandle(this);
 
-    // delete owned source data
-    if (source._image != NULL) // Attention: wxWidgets used NULL and not nullptr
-    {
-        delete source._image;
-        source._image = NULL;
-    }
-
-    // invalidate source handles
+    // invalidate source handles for non-owned data
     source._currentNode = nullptr;
     source._rootNode = nullptr;
     source._chatLogic = nullptr;
     
     return *this;
 }
-
-////
-//// EOF STUDENT CODE
 
 void ChatBot::ReceiveMessageFromUser(std::string message)
 {

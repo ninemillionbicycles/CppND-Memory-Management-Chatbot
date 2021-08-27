@@ -14,13 +14,8 @@ private:
     wxBoxSizer *_dialogSizer;
     wxBitmap _image;
 
-    //// STUDENT CODE
-    ////
-
+    // ChatBotPanelDialog holds exclusive ownership ower _chatLogic
     std::unique_ptr<ChatLogic> _chatLogic;
-
-    ////
-    //// EOF STUDENT CODE
 
 public:
     // constructor / destructor
@@ -28,7 +23,7 @@ public:
     ~ChatBotPanelDialog();
 
     // getter / setter
-    // CHANGED: Return the raw pointer since caller just needs to inspect underlying ChatLogic object
+    // return the raw pointer since caller just needs to inspect underlying ChatLogic object
     ChatLogic *GetChatLogicHandle() { return _chatLogic.get(); }
 
     // events

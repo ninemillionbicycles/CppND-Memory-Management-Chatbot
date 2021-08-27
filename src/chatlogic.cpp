@@ -11,50 +11,9 @@
 #include "chatbot.h"
 #include "chatlogic.h"
 
-ChatLogic::ChatLogic()
-{
-    //// STUDENT CODE
-    ////
+ChatLogic::ChatLogic() {}
 
-    // create instance of chatbot
-    // _chatBot = new ChatBot("../images/chatbot.png"); // CHANGED (DELETED)
-
-    // add pointer to chatlogic so that chatbot answers can be passed on to the GUI
-    // _chatBot->SetChatLogicHandle(this); // CHANGED (DELETED)
-
-    ////
-    //// EOF STUDENT CODE
-}
-
-ChatLogic::~ChatLogic()
-{
-    //// STUDENT CODE
-    ////
-
-    // delete chatbot instance
-    // delete _chatBot; // CHANGED (DELETED)
-
-    // CHANGED: Should not be needed anymore since smart pointer is deleted automatically
-    /*
-    // delete all nodes
-    for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
-    {
-        delete *it;
-    }
-    */
-
-    // CHANGED: Should not be needed anymore since smart pointer is deleted automatically
-    /*
-    // delete all edges
-    for (auto it = std::begin(_edges); it != std::end(_edges); ++it)
-    {
-        delete *it;
-    }
-    */
-
-    ////
-    //// EOF STUDENT CODE
-}
+ChatLogic::~ChatLogic() {}
 
 template <typename T>
 void ChatLogic::AddAllTokensToElement(std::string tokenID, tokenlist &tokens, T &element)
@@ -128,35 +87,29 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                     // node-based processing
                     if (type->second == "NODE")
                     {
-                        //// STUDENT CODE
-                        ////
-
                         // check if node with this ID exists already
-                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](auto &node) { return node->GetID() == id; });
+                        // find_if returns an iterator to the first element in the range _nodes.begin() to _nodes.end() for which the lambda function returns true
+                        // the smart pointers inside _nodes need to be passed to the lambda function by reference because ownership of the managed GraphNode should not be transferred
+                        // use const to ensure the lambda function does not modify _nodes
+                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](const auto &node) { return node->GetID() == id; });
 
                         // create new element if ID does not yet exist
                         if (newNode == _nodes.end())
                         {
-                            _nodes.emplace_back(std::make_unique<GraphNode>(id)); // CHANGED: Create new smart pointer
+                            _nodes.emplace_back(std::make_unique<GraphNode>(id)); // create new smart pointer
                             newNode = _nodes.end() - 1; // get iterator to last element
 
                             // add all answers to current node
-                            AddAllTokensToElement("ANSWER", tokens, **newNode); // CHANGED: newNode is an iterator (=a pointer) to a unique_ptr<GraphNode> instance. 
-                                                                                            // I can get a pointer to the underlying unique_ptr<GraphNode> by using the dereferencing operator *.
-                                                                                            // I then can get to the managed object by using the dereferencing operator again (just like if unique_ptr were in fact a raw pointer).
-                                                                                            // This works because smart pointers overwrite the dereferencing operator to behave exactly like "normal" (raw) pointers
+                            AddAllTokensToElement("ANSWER", tokens, **newNode); // newNode is an iterator (=a pointer) to a unique_ptr<GraphNode> instance. 
+                                                                                // I can get a pointer to the underlying unique_ptr<GraphNode> by using the dereferencing operator *.
+                                                                                // I then can get to the managed object by using the dereferencing operator again (just like if unique_ptr were in fact a raw pointer).
+                                                                                // This works because smart pointers overwrite the dereferencing operator to behave exactly like "normal" (raw) pointers in such cases
                         }
-
-                        ////
-                        //// EOF STUDENT CODE
                     }
 
                     // edge-based processing
                     if (type->second == "EDGE")
                     {
-                        //// STUDENT CODE
-                        ////
-
                         // find tokens for incoming (parent) and outgoing (child) node
                         auto parentToken = std::find_if(tokens.begin(), tokens.end(), [](const std::pair<std::string, std::string> &pair) { return pair.first == "PARENT"; });
                         auto childToken = std::find_if(tokens.begin(), tokens.end(), [](const std::pair<std::string, std::string> &pair) { return pair.first == "CHILD"; });
@@ -165,30 +118,24 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                         {
                             // get iterator on incoming and outgoing node via ID search
                             // find_if returns an iterator to the first element in the range _nodes.begin() to _nodes.end() for which the lambda function returns true
-                            // The smart pointers inside _nodes need to be passed to the lambda functio by reference because ownership of the managed GraphNode should not be transferred
-                            auto parentNode = std::find_if(_nodes.begin(), _nodes.end(), [&parentToken](auto &node) { return node->GetID() == std::stoi(parentToken->second); }); // CHANGED: Same logic as above
-                            auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](auto &node) { return node->GetID() == std::stoi(childToken->second); }); // CHANGED: Same logic as above
+                            // the smart pointers inside _nodes need to be passed to the lambda function by reference because ownership of the managed GraphNode should not be transferred
+                            // use const to ensure the lambda function does not modify _nodes
+                            auto parentNode = std::find_if(_nodes.begin(), _nodes.end(), [&parentToken](const auto &node) { return node->GetID() == std::stoi(parentToken->second); });
+                            auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](const auto &node) { return node->GetID() == std::stoi(childToken->second); });
 
-                            // create new edge
-                            // GraphEdge *edge = new GraphEdge(id);
-                            std::unique_ptr<GraphEdge> edge = std::make_unique<GraphEdge>(id); // CHANGED
-                            edge->SetChildNode((*childNode).get()); // CHANGED: Again, childNode is an iterator to a unique_ptr<GraphNode> instance.
-                                                                    // I can get a pointer to the underlying unique_ptr<GraphNode> by using the dereferencing operator *.
-                                                                    // I then can get a pointer to the managed GraphNode object with .get().
-                            edge->SetParentNode((*parentNode).get()); // CHANGED: Same as above
-                            // _edges.emplace_back(std::move(edge)); // CHANGED
+                            // create new edge as unique_ptr
+                            std::unique_ptr<GraphEdge> edge = std::make_unique<GraphEdge>(id);
+                            edge->SetChildNode((*childNode).get()); // childNode is an iterator to a unique_ptr<GraphNode> instance
+                                                                    // I can get a pointer to the underlying unique_ptr<GraphNode> by using the dereferencing operator *
+                            edge->SetParentNode((*parentNode).get());
 
                             // find all keywords for current node
-                            AddAllTokensToElement("KEYWORD", tokens, *edge); // CHANGED
+                            AddAllTokensToElement("KEYWORD", tokens, *edge);
 
                             // store reference in child node and parent node
-                            (*childNode)->AddEdgeToParentNode(edge.get()); // CHANGED: By dereferencing once, I get to the unique_ptr
-                                                                             // I then get a pointer to the GraphNode instance using .get()
-                            (*parentNode)->AddEdgeToChildNode(std::move(edge)); // CHANGED
+                            (*childNode)->AddEdgeToParentNode(edge.get());
+                            (*parentNode)->AddEdgeToChildNode(std::move(edge));
                         }
-
-                        ////
-                        //// EOF STUDENT CODE
                     }
                 }
                 else
@@ -207,22 +154,19 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
         return;
     }
 
-    //// STUDENT CODE
-    ////
-
     // identify root node
     GraphNode *rootNode = nullptr;
     for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
     {
         // search for nodes which have no incoming edges
-        if ((*it)->GetNumberOfParents() == 0) // CHANGED: I can get to the unique_ptr with *. 
-                                              // As with a "normal" raw pointer, I can use -> to access member variables.
-                                              // (*it).get()->GetNumberOfParents() would be equivalent.
+        if ((*it)->GetNumberOfParents() == 0) // I can get to the unique_ptr with *
+                                              // as with a "normal" raw pointer, I can use -> to access member variables
+                                              // (*it).get()->GetNumberOfParents() would be equivalent
         {
 
             if (rootNode == nullptr)
             {
-                rootNode = (*it).get(); // assign current node to root // CHANGED
+                rootNode = (*it).get(); // assign current node to root
             }
             else
             {
@@ -232,20 +176,19 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
     }
 
     // create local instance of ChatBot on the stack
-    ChatBot myBot = ChatBot("../images/chatbot.png"); // CHANGED
+    ChatBot myBot = ChatBot("../images/chatbot.png");
 
     // make sure chatlogic class has a reference to the ChatBot to send/receive messages
-    _chatBot = &myBot; // CHANGED (ADDED)
+    _chatBot = &myBot; 
 
     // make sure myBot holds a pointer to this chatLogic to be able to send messages 
-    myBot.SetChatLogicHandle(this); // CHANGED (ADDED)
+    myBot.SetChatLogicHandle(this);
 
-    // add chatbot to graph root node
-    myBot.SetRootNode(rootNode); // CHANGED
-    rootNode->MoveChatbotHere(std::move(myBot)); // CHANGED
-    
-    ////
-    //// EOF STUDENT CODE
+    // add myBot to graph root node
+    myBot.SetRootNode(rootNode);
+
+    // move myBot to rootNode
+    rootNode->MoveChatbotHere(std::move(myBot));
 }
 
 void ChatLogic::SetPanelDialogHandle(ChatBotPanelDialog *panelDialog)
