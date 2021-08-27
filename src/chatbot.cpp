@@ -96,7 +96,7 @@ ChatBot::ChatBot(ChatBot &&source)
 {
     std::cout << "ChatBot Move Constructor" << std::endl;
 
-    // create deep copy for owned data
+    // create deep copy for owned data // TODO: I am thinking it should work with a shallow copy too because I will call source._image = NULL later?
     _image = new wxBitmap();
     *_image = *source._image;
 
@@ -131,7 +131,7 @@ ChatBot &ChatBot::operator=(ChatBot &&source)
         return *this;
     } // protect against self-assignment
 
-        // create deep copy for owned data
+    // create deep copy for owned data // TODO: I am thinking it should work with a shallow copy too because I will call source._image = NULL later?
     _image = new wxBitmap();
     *_image = *source._image;
 
