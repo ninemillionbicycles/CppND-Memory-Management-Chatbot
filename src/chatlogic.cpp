@@ -5,6 +5,7 @@
 #include <iterator>
 #include <tuple>
 #include <algorithm>
+#include <memory>
 #include "graphedge.h"
 #include "graphnode.h"
 #include "chatbot.h"
@@ -16,10 +17,10 @@ ChatLogic::ChatLogic()
     ////
 
     // create instance of chatbot
-    _chatBot = new ChatBot("../images/chatbot.png");
+    // _chatBot = new ChatBot("../images/chatbot.png"); // CHANGED (DELETED)
 
     // add pointer to chatlogic so that chatbot answers can be passed on to the GUI
-    _chatBot->SetChatLogicHandle(this);
+    // _chatBot->SetChatLogicHandle(this); // CHANGED (DELETED)
 
     ////
     //// EOF STUDENT CODE
@@ -31,7 +32,7 @@ ChatLogic::~ChatLogic()
     ////
 
     // delete chatbot instance
-    delete _chatBot;
+    // delete _chatBot; // CHANGED (DELETED)
 
     // CHANGED: Should not be needed anymore since smart pointer is deleted automatically
     /*
@@ -131,7 +132,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                         ////
 
                         // check if node with this ID exists already
-                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](std::unique_ptr<GraphNode> &node) { return node->GetID() == id; });
+                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](auto &node) { return node->GetID() == id; });
 
                         // create new element if ID does not yet exist
                         if (newNode == _nodes.end())
@@ -165,8 +166,8 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                             // get iterator on incoming and outgoing node via ID search
                             // find_if returns an iterator to the first element in the range _nodes.begin() to _nodes.end() for which the lambda function returns true
                             // The smart pointers inside _nodes need to be passed to the lambda functio by reference because ownership of the managed GraphNode should not be transferred
-                            auto parentNode = std::find_if(_nodes.begin(), _nodes.end(), [&parentToken](std::unique_ptr<GraphNode> &node) { return node->GetID() == std::stoi(parentToken->second); }); // CHANGED: Same logic as above
-                            auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](std::unique_ptr<GraphNode> &node) { return node->GetID() == std::stoi(childToken->second); }); // CHANGED: Same logic as above
+                            auto parentNode = std::find_if(_nodes.begin(), _nodes.end(), [&parentToken](auto &node) { return node->GetID() == std::stoi(parentToken->second); }); // CHANGED: Same logic as above
+                            auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](auto &node) { return node->GetID() == std::stoi(childToken->second); }); // CHANGED: Same logic as above
 
                             // create new edge
                             // GraphEdge *edge = new GraphEdge(id);
@@ -230,9 +231,18 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
         }
     }
 
+    // create local instance of ChatBot on the stack
+    ChatBot myBot = ChatBot("../images/chatbot.png"); // CHANGED
+
+    // make sure chatlogic class has a reference to the ChatBot to send/receive messages
+    _chatBot = &myBot; // CHANGED (ADDED)
+
+    // make sure myBot holds a pointer to this chatLogic to be able to send messages 
+    myBot.SetChatLogicHandle(this); // CHANGED (ADDED)
+
     // add chatbot to graph root node
-    _chatBot->SetRootNode(rootNode);
-    rootNode->MoveChatbotHere(_chatBot);
+    myBot.SetRootNode(rootNode); // CHANGED
+    rootNode->MoveChatbotHere(std::move(myBot)); // CHANGED
     
     ////
     //// EOF STUDENT CODE

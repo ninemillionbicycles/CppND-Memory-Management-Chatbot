@@ -13,7 +13,7 @@ ChatBot::ChatBot()
 {
     // invalidate data handles
     _image = nullptr;
-    // _chatLogic = nullptr; // CHANGED: This should not be needed anymore with a unique pointer
+    // _chatLogic = nullptr; // This is not needed anymore with a unique pointer
     _rootNode = nullptr;
 }
 
@@ -23,7 +23,7 @@ ChatBot::ChatBot(std::string filename)
     std::cout << "ChatBot Constructor" << std::endl;
 
     // invalidate data handles
-    // _chatLogic = nullptr; // CHANGED: This should not be needed anymore with a unique pointer
+    // _chatLogic = nullptr; // This is not needed anymore with a unique pointer
     _rootNode = nullptr;
 
     // load image into heap memory
@@ -66,15 +66,21 @@ ChatBot::ChatBot(const ChatBot &source)
     _chatLogic->SetChatbotHandle(this);
 }
 
-// 3. copy assignment operator with exclusive ownership policy
+// 3. copy assignment operator
 ChatBot &ChatBot::operator=(const ChatBot &source)
 {
     std::cout << "ChatBot Copy Assignment Operator" << std::endl;
-
+    
     if (this == &source)
     {
         return *this;
     } // protect against self-assignment
+
+    // delete owned data if it exists in this
+    if (_image != NULL)
+    {
+        delete _image;
+    }
 
     // create deep copy for owned data
     _image = new wxBitmap();
@@ -91,7 +97,7 @@ ChatBot &ChatBot::operator=(const ChatBot &source)
     return *this;
 }
 
-// 4. move constructor with exclusive ownership policy
+// 4. move constructor
 ChatBot::ChatBot(ChatBot &&source)
 {
     std::cout << "ChatBot Move Constructor" << std::endl;
@@ -130,6 +136,12 @@ ChatBot &ChatBot::operator=(ChatBot &&source)
     {
         return *this;
     } // protect against self-assignment
+
+    // delete owned data if it exists in this
+    if (_image != NULL)
+    {
+        delete _image;
+    }
 
     // create deep copy for owned data // TODO: I am thinking it should work with a shallow copy too because I will call source._image = NULL later?
     _image = new wxBitmap();

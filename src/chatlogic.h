@@ -26,7 +26,7 @@ private:
 
     // data handles (not owned)
     GraphNode *_currentNode;
-    ChatBot *_chatBot;
+    ChatBot *_chatBot; // No change necessary here to make this non-owning
     ChatBotPanelDialog *_panelDialog;
 
     // proprietary type definitions
