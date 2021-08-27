@@ -21,7 +21,7 @@ ChatBot::ChatBot()
 ChatBot::ChatBot(std::string filename)
 {
     std::cout << "ChatBot Constructor" << std::endl;
-    
+
     // invalidate data handles
     // _chatLogic = nullptr; // CHANGED: This should not be needed anymore with a unique pointer
     _rootNode = nullptr;
@@ -36,7 +36,7 @@ ChatBot::~ChatBot()
     std::cout << "ChatBot Destructor" << std::endl;
 
     // deallocate heap memory
-    if(_image != NULL) // Attention: wxWidgets used NULL and not nullptr
+    if (_image != NULL) // Attention: wxWidgets used NULL and not nullptr
     {
         delete _image;
         _image = NULL;
@@ -49,46 +49,114 @@ ChatBot::~ChatBot()
 // According to the program schematic, the chatbot should have exclusive ownership over the _image
 
 // 2. copy constructor with exclusive ownership policy
-ChatBot::ChatBot(ChatBot &source) 
+ChatBot::ChatBot(const ChatBot &source)
 {
     std::cout << "ChatBot Copy Constructor" << std::endl;
 
-    _image = source._image;
-    source._image = NULL;
+    // create deep copy for owned data
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    // create shallow copy for non-owned data
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+
+    // make sure that this copy can be handled by chatLogic
+    _chatLogic->SetChatbotHandle(this);
 }
 
 // 3. copy assignment operator with exclusive ownership policy
-ChatBot &ChatBot::operator=(ChatBot &source)
+ChatBot &ChatBot::operator=(const ChatBot &source)
 {
     std::cout << "ChatBot Copy Assignment Operator" << std::endl;
-    
-    if (this == &source) { return *this; } // protect against self-assignment
-    
-    _image = source._image;
-    source._image = NULL;
+
+    if (this == &source)
+    {
+        return *this;
+    } // protect against self-assignment
+
+    // create deep copy for owned data
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    // create shallow copy for non-owned data
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+
+    // make sure that this copy can be handled by chatLogic
+    _chatLogic->SetChatbotHandle(this);
+
     return *this;
-} 
+}
 
 // 4. move constructor with exclusive ownership policy
 ChatBot::ChatBot(ChatBot &&source)
 {
     std::cout << "ChatBot Move Constructor" << std::endl;
 
-    _image = source._image;
-    source._image = NULL;
+    // create deep copy for owned data
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    // create shallow copy for non-owned data
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+
+    // make sure that this copy can be handled by chatLogic
+    _chatLogic->SetChatbotHandle(this);
+
+    // delete owned source data
+    if (source._image != NULL) // Attention: wxWidgets used NULL and not nullptr
+    {
+        delete source._image;
+        source._image = NULL;
+    }
+
+    // invalidate source handles
+    source._currentNode = nullptr;
+    source._rootNode = nullptr;
+    source._chatLogic = nullptr;
 }
 
 // 5. move assignment operator with exclusive ownership policy
 ChatBot &ChatBot::operator=(ChatBot &&source)
 {
     std::cout << "ChatBot Move Assignment Operator" << std::endl;
+
+    if (this == &source)
+    {
+        return *this;
+    } // protect against self-assignment
+
+        // create deep copy for owned data
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    // create shallow copy for non-owned data
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+
+    // make sure that this copy can be handled by chatLogic
+    _chatLogic->SetChatbotHandle(this);
+
+    // delete owned source data
+    if (source._image != NULL) // Attention: wxWidgets used NULL and not nullptr
+    {
+        delete source._image;
+        source._image = NULL;
+    }
+
+    // invalidate source handles
+    source._currentNode = nullptr;
+    source._rootNode = nullptr;
+    source._chatLogic = nullptr;
     
-    if (this == &source) { return *this; } // protect against self-assignment
-    
-    _image = source._image;
-    source._image = NULL;
     return *this;
-} 
+}
 
 ////
 //// EOF STUDENT CODE
@@ -114,7 +182,8 @@ void ChatBot::ReceiveMessageFromUser(std::string message)
     if (levDists.size() > 0)
     {
         // sort in ascending order of Levenshtein distance (best fit is at the top)
-        std::sort(levDists.begin(), levDists.end(), [](const EdgeDist &a, const EdgeDist &b) { return a.second < b.second; });
+        std::sort(levDists.begin(), levDists.end(), [](const EdgeDist &a, const EdgeDist &b)
+                  { return a.second < b.second; });
         newNode = levDists.at(0).first->GetChildNode(); // after sorting the best edge is at first position
     }
     else
