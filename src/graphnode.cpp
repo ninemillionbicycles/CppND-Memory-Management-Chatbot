@@ -15,20 +15,20 @@ void GraphNode::AddEdgeToParentNode(GraphEdge *edge)
     _parentEdges.emplace_back(edge);
 }
 
-void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> &&edge)
+void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge)
 {
     _childEdges.emplace_back(std::move(edge));
 }
 
 void GraphNode::MoveChatbotHere(ChatBot chatbot)
 {
-    _chatBot = chatbot;
+    _chatBot = std::move(chatbot);
     _chatBot.SetCurrentNode(this);
 }
 
 void GraphNode::MoveChatbotToNewNode(GraphNode *newNode)
 {
-    newNode->MoveChatbotHere(_chatBot);
+    newNode->MoveChatbotHere(std::move(_chatBot));
 }
 
 GraphEdge *GraphNode::GetChildEdgeAtIndex(int index)
